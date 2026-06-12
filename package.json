@@ -3,6 +3,13 @@
   "displayName": "Table View",
   "description": "convert lines of class based definitions into a table view",
   "version": "0.0.1",
+  "publisher": "Crimson",
+	"private": false,
+	"license": "MIT",
+  "repository": {
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-extension-samples"
+	},
   "engines": {
     "vscode": "^1.120.0"
   },
