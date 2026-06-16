@@ -1,40 +1,77 @@
 {
-  "name": "table-view",
-  "displayName": "Table View",
-  "description": "convert lines of class based definitions into a table view",
-  "version": "0.0.1",
-  "publisher": "Crimson",
-	"private": false,
+	"name": "table-view",
+	"displayName": "Table View",
+	"description": "tables repeat new from class",
+	"version": "0.0.1",
+	"publisher": "CRIMSON",
+	"private": true,
 	"license": "MIT",
-  "repository": {
+	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-extension-samples"
+		"url": "https://github.com/CrimsonInCapitals/table-view"
 	},
-  "engines": {
-    "vscode": "^1.120.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [],
-  "main": "./extension.js",
-  "contributes": {
-    "commands": [{
-      "command": "tableview.create",
-      "title": "Table View"
-    }]
-  },
-  "scripts": {
-    "lint": "eslint .",
-    "pretest": "npm run lint",
-    "test": "vscode-test"
-  },
-  "devDependencies": {
-    "@types/vscode": "^1.120.0",
-    "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
-    "eslint": "^9.39.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
-  }
+	"engines": {
+		"vscode": "^1.100.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [],
+	"main": "./out/extension.js",
+	"contributes": {
+		"customEditors": [
+			{
+				"viewType": "catCustoms.catScratch",
+				"displayName": "Cat Scratch",
+				"selector": [
+					{
+						"filenamePattern": "*.cscratch"
+					}
+				]
+			},
+			{
+				"viewType": "CRIMSON.TableView",
+				"displayName": "Table View",
+				"selector": [
+					{"filenamePattern": "*.jsx"},
+					{"filenamePattern": "*.js"},
+					{"filenamePattern": "*.tv"}
+				],
+				"priority": "default"
+			},
+			{
+				"viewType": "catCustoms.pawDraw",
+				"displayName": "Paw Draw",
+				"selector": [
+					{
+						"filenamePattern": "*.pawdraw"
+					}
+				]
+			}
+		],
+		"commands": [
+			{
+				"command": "catCustoms.pawDraw.new",
+				"title": "Create new Paw Draw Document",
+				"category": "Paw Draw"
+			},
+			{"command": "conditionalWebview.show",
+			"title": "Open In Table View"}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "eslint",
+		"watch": "tsc -w -p ./"
+	},
+	"devDependencies": {
+		"@eslint/js": "^9.13.0",
+		"@stylistic/eslint-plugin": "^2.9.0",
+		"@types/node": "^22",
+		"@types/vscode": "^1.100.0",
+		"eslint": "^9.13.0",
+		"typescript": "^5.9.2",
+		"typescript-eslint": "^8.39.0"
+	}
 }

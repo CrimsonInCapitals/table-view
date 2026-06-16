@@ -1,65 +1,25 @@
-# table-view README
+# Cat Customs - Custom Editor API Samples
 
-This is the README for your extension "table-view". After writing up a brief description, we recommend including the following sections.
+![Paw draw editor ](documentation/example.png)
 
-## Features
+Demonstrates VS Code's [custom editor API](https://code.visualstudio.com/api/extension-guides/custom-editors) using two custom editors:
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Cat Scratch — Uses the finalized custom text editor api to provide a custom editor for `.cscratch` files (which are just json files)
+- Paw Draw - Uses the binary custom editor api to provide a custom editor for `.pawdraw` files (which are just png files with a different file extension).
 
-For example if there is an image subfolder under your extension project workspace:
+## VS Code API
 
-\!\[feature X\]\(images/feature-x.png\)
+### `vscode` module
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- [`window.registerCustomEditorProvider`](https://code.visualstudio.com/api/references/vscode-api#window.registerCustomEditorProvider)
+- [`CustomTextEditor`](https://code.visualstudio.com/api/references/vscode-api#CustomTextEditor)
+- [`CustomEditor`](https://code.visualstudio.com/api/references/vscode-api#CustomEditor)
 
-## Requirements
+## Running the example
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Open this example in VS Code 1.46+
+- `npm install`
+- `npm run watch` or `npm run compile`
+- `F5` to start debugging
 
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Open the example files from the `exampleFiles` directory.

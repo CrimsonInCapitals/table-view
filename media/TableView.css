@@ -1,0 +1,79 @@
+body#root{
+	padding: 0;
+}
+div.tablehead{
+	margin-left: 68px;
+	padding: 8px 0px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 16px;
+}
+.tablehead h2{
+	font-weight: 800;
+}
+table.table{
+		/* border: 2px solid var(--vscode-textSeparator-foreground); */
+		border-collapse: collapse;
+		width: fit-content;
+}
+.head th{
+	padding: 8px 16px;
+}
+.table td,.table th{
+	border: 2px solid var(--vscode-textSeparator-foreground);
+	text-align: left;
+	white-space: nowrap;
+}
+.table input{
+	padding: 8px 16px;
+	background-color: unset;
+	width: fit-content;
+}
+.table th input{
+	font-weight: 800;
+}
+.table tr.head th,.table tr.header{
+	position: sticky;
+	top: -1px;
+	background-color: var(--vscode-editor-background);
+}
+.table tr td:focus{
+	background-color: var(--vscode-textPreformat-background);
+}
+.table th{
+	cursor: default;
+}
+.table td.default{
+	color: var(--vscode-textSeparator-foreground);
+}
+.table tr td.number{
+	border: 0 ;
+	min-width: 68px;
+	padding: 0;
+	color: var(--vscode-editorLineNumber-foreground);
+	position: relative;
+}
+td.number div.numdiv{
+	width: 23px;
+	left: 19px;
+	position: absolute;
+	text-align: right;
+	height: 100%;
+	bottom: 0;
+	font-variant-numeric: tabular-nums;
+	font-family: Consolas, "Courier New", monospace;
+    font-weight: normal;
+    font-size: 14px;
+	cursor: default;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.table tr:focus-within td.number{
+	background-color: unset;
+}
+
+.table td.highlight,.table tr th.highlight{
+	background-color: var(--vscode-editor-hoverHighlightBackground);
+}
