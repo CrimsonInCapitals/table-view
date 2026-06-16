@@ -1,9 +1,16 @@
 {
-	"name": "table-view",
-	"displayName": "Table View",
+	"name": "class-table-view",
+	"displayName": "Class Table View",
 	"description": "tables repeat new from class",
 	"version": "0.0.1",
-	"publisher": "CRIMSON",
+	"publisher": "crimsonincapitals",
+	"icon": "documentation/icon.png",
+	"pricing": "Free",
+	"bugs": {
+		"url": "https://github.com/CrimsonInCapitals/table-view/issues",
+		"email": "harrison.cole@crimsonincapitals.com"
+	},
+	"homepage": "https://github.com/CrimsonInCapitals/table-view/blob/master/README.md",
 	"private": true,
 	"license": "MIT",
 	"repository": {
