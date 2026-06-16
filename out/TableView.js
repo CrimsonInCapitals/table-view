@@ -22,7 +22,6 @@ class TableViewEditorProvider {
             await vscode.commands.executeCommand('vscode.openWith', document.uri, 'default');
             return;
         }
-        vscode.window.showInformationMessage('triggered');
         // Setup initial content for the webview
         webviewPanel.webview.options = {
             enableScripts: true,

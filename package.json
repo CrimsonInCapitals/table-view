@@ -2,7 +2,7 @@
 	"name": "class-table-view",
 	"displayName": "Class Table View",
 	"description": "tables repeat new from class",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher": "crimsonincapitals",
 	"icon": "documentation/icon.png",
 	"pricing": "Free",
@@ -41,8 +41,16 @@
 		],
 		"commands": [
 			{"command": "conditionalWebview.show",
-			"title": "Open In Table View"}
-		]
+			"title": "Open In Table View"},
+			{"command": "CRIMSON.maketable",
+			"title": "Creat Table At Selection"}
+		],
+		"menus": {
+			"editor/context": [
+				{"command": "CRIMSON.maketable",
+				"group": "navigation"}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

@@ -39,7 +39,6 @@ export class TableViewEditorProvider implements vscode.CustomTextEditorProvider 
 			);
 			return;
 		}
-		vscode.window.showInformationMessage('triggered')
 		// Setup initial content for the webview
 		webviewPanel.webview.options = {
 			enableScripts: true,
