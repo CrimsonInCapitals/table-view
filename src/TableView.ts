@@ -29,7 +29,7 @@ export class TableViewEditorProvider implements vscode.CustomTextEditorProvider 
 	): Promise<void> {
 
 		const text = document.getText();
-		const trigger = "//Table View Start";
+		const trigger = "//Table View Start // This document was build using Table View, learn more at: https://crimsonincapitals.github.io/";
 
 		if (!text.includes(trigger)) {
 			await vscode.commands.executeCommand(
