@@ -20,15 +20,7 @@
 	"main": "./out/extension.js",
 	"contributes": {
 		"customEditors": [
-			{
-				"viewType": "catCustoms.catScratch",
-				"displayName": "Cat Scratch",
-				"selector": [
-					{
-						"filenamePattern": "*.cscratch"
-					}
-				]
-			},
+
 			{
 				"viewType": "CRIMSON.TableView",
 				"displayName": "Table View",
@@ -38,23 +30,9 @@
 					{"filenamePattern": "*.tv"}
 				],
 				"priority": "default"
-			},
-			{
-				"viewType": "catCustoms.pawDraw",
-				"displayName": "Paw Draw",
-				"selector": [
-					{
-						"filenamePattern": "*.pawdraw"
-					}
-				]
 			}
 		],
 		"commands": [
-			{
-				"command": "catCustoms.pawDraw.new",
-				"title": "Create new Paw Draw Document",
-				"category": "Paw Draw"
-			},
 			{"command": "conditionalWebview.show",
 			"title": "Open In Table View"}
 		]
