@@ -12,6 +12,9 @@ div.tablehead{
 .tablehead h2{
 	font-weight: 800;
 }
+.table .header th.classinuse{
+	font-weight: 400;
+}
 table.table{
 		/* border: 2px solid var(--vscode-textSeparator-foreground); */
 		border-collapse: collapse;
@@ -24,6 +27,28 @@ table.table{
 	border: 2px solid var(--vscode-textSeparator-foreground);
 	text-align: left;
 	white-space: nowrap;
+}
+.table tr{
+	position: relative;
+}
+.table div.delete{
+	text-align: center;
+	position:absolute;
+	top:0;
+	right:0;
+	height: 100%;
+	padding: 8px;
+	display:none;
+	background-color: var(--vscode-textSeparator-foreground);
+	border-bottom-left-radius: 4px;
+	border-top-left-radius: 4px;
+	cursor: pointer;
+}
+.table tr:hover div.delete{
+	display: flex;
+}
+.table .rownew td,.table .rownew th{
+	border: 2px dashed var(--vscode-textSeparator-foreground);
 }
 .table input{
 	padding: 8px 16px;

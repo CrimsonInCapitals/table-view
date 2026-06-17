@@ -1,8 +1,57 @@
-// @ts-check
+
 
 // Script run within the webview itself.
 (function () {
 
+
+
+
+
+	const defstrings = [
+		'//Table View Start',
+		'// This document was build using Table View, learn more at: https://crimsonincapitals.github.io/',
+		'//Table View End'
+	]
+	
+	class def{
+
+		constructor(a,b){
+			this.get = (vname='example')=>{
+				if(b!==undefined)return ' '+a.trim()+' '+vname.trim()+' '+b.trim()+' '
+				else return ' '+a.trim()+' '
+			}
+			this.named = b===undefined ? false : true
+			this.deconstruct = (start='export const Name = ')=>{
+				if(b===undefined)return undefined
+				start = start.trim()
+				let name = start.startsWith(a.trim())? start.slice(a.trim().length).trim() : start
+				if(b!==undefined){name = name.endsWith(b.trim())? name.slice(0,name.length-b.trim().length).trim() : name}
+				return name
+			}
+			this.identifies = a==''&& b!==undefined ?b:a
+		}
+	}
+	class TableType{
+		constructor(name,askName,display,before,after,front,back){
+			this.before = (vname)=>defstrings[0].trim()+' type='+name+' '+defstrings[1].trim()+'\n'
+			this.newBefore = (vname)=>this.before(vname)+before.get(vname)
+			this.front=(vname)=>front.get(vname).trim()+' '
+			this.forntIdentifier = front.identifies
+			this.deconstructFront=(start)=>front.deconstruct(start)
+			this.namedRows = front.named
+			this.display=display
+			this.back = back+'\n'
+			this.after=defstrings[2].trim()
+			this.newAfter=after+'\n'+this.after
+			this.askName = askName
+			this.name=name
+		}
+	}
+	const types=[
+		new TableType('ec',false, 'Export Each',		new def(''),					'',	new def('export const','='),''),
+		new TableType('ob',true, 'Export All: Object',	new def('export const','= {'),	'}',new def('',':'),			','),
+		new TableType('ar',true, 'Export All: Array',	new def('export const','= ['),	']',new def(''),				',')
+	]
 	// Get a reference to the VS Code webview api.
 	// We use this API to post messages back to our extension.
 
@@ -15,6 +64,7 @@
 			messagetype:type
 		});
 	}
+
 	const PAIRS = {
 		')': '(',
 		']': '[',
@@ -26,7 +76,6 @@
 	};
 	const OPENERS = new Set(Object.values(PAIRS));
 	const vscode = acquireVsCodeApi();
-
 	const body = document.querySelector('body#root')
 
 	const getOpentoClose=(text,open='{',close='}',cut=0)=>{
@@ -45,6 +94,7 @@
 	const findClass=(text,name='C')=>{
 		if(text.includes('class') == false){postMessage('error','Class must be within document for Class mode');
 		return;}
+		if(name.startsWith('new'))name=name.slice(3).trim()
 		let classes = text.split(' ').join('').split('class'+name+'{')[1]
 		let constructor = getOpentoClose(classes.split('constructor')[1],'(',')',1)
 		let names =[]
@@ -76,33 +126,60 @@
 		let obj = classInUse.items.map((item,index)=>this[item]=array[index])
 		return [obj,array]
 	}
-
+	class RowObj{
+		constructor(name=undefined,defined={},array=[],position='new',absolutePosition='new',text=''){
+			this.name =name
+			this.defined=defined
+			this.array=array
+			this.position=position
+			this.absolutePosition=absolutePosition
+			this.text=text
+		}
+	}
+	const IdentifyType=(line)=>{
+		let typestring = line.split('type=')[1].split('//')[0].trim()
+		if(types==undefined)return undefined
+		let ptypes = types.filter(t=>t.name==typestring)
+		return ptypes.length>=1?ptypes[0]:types[0]
+	}
 	const DefineTables = (lines,TableLocations,text)=>{
 		const Tables =[]
 		for(let tableI = 0;tableI<TableLocations.length;tableI++){
 			let rows = lines.slice(TableLocations[tableI][0],TableLocations[tableI][1])
+			let tableType = IdentifyType(rows[0])
+			if(tableType == undefined){postMessage('error','Table type is not defined, please define a table type in the first line of the table');return}
 			let table = []
 			let classInUse=undefined
-			for(let i = 0;i<rows.length;i++){
-				if(rows[i].startsWith('//')){}
-				else if(rows[i].includes('=')){
-					let nv=rows[i].split('=')
-					nv[0]=nv[0].split('const')[1].trim()
-					if(classInUse == undefined){classInUse=findClass(text,nv[1].split('new')[1].split('(')[0].trim())}
-					if(nv[1].trim().startsWith('new')){nv[1] = disectfromclass(nv[1],classInUse)}
-					let obj = {
-						name:nv[0],
-						defined:nv[1][0],
-						array:nv[1][1],
-						position:i,
-						absolutePosition:i+TableLocations[tableI][0],
-						text:rows[i]
+			for(let i = 1;i<rows.length;i++){
+				if(rows[i].includes('new') && !rows[i].startsWith('//')){
+					let set = rows[i]
+					let name =undefined
+					if(tableType.namedRows){
+						let split=rows[i].split('new')
+						let [front,...rest] = split
+						set = 'new '+rest.join('new')
+						name = tableType.deconstructFront(front)
 					}
-					table.push(obj)
+					if(classInUse == undefined){classInUse=findClass(text,set.split('(')[0].trim())}
+					if(set.trim().startsWith('new')){set = disectfromclass(set,classInUse)}
+					let obj = new RowObj(
+						name,
+						set[0],
+						set[1],
+						i,
+						i+TableLocations[tableI][0],
+						rows[i]
+					)
+					table.push(obj)				}
+				else if(rows[i].includes('=')){
+					
 				}
 			}
-			Tables.push({table:table,classInUse:classInUse})
+			if(table.length<=0){
+				Tables.push({table:undefined,toAdd:TableLocations[tableI][1],tableType:tableType})
+			}else Tables.push({table:table,classInUse:classInUse,tableType:tableType})
 		}
+
 		return(Tables)
 	}
 
@@ -141,6 +218,7 @@
 	function BuildNumber(location,number='#'){
 		let num = BuildElement('td','number',location)
 		BuildElement('div','numdiv',num,number)
+		return num
 	}
 	function Highlight(className,direction=true,table){
 		let tableE = document.getElementById(table)
@@ -150,77 +228,149 @@
 		}
 	}
 	function renameLine(row,element,classInUse){
-		let text = row.text.split(row.name)[0].trim()+' '+element.value.replace(/\s+/g, "")+' = new '+classInUse.name+'('+row.array.toString()+')'
+		let text = row.text.split(row.name)[0].trim()+' '+element.value.replace(/\s+/g, "")+' = new '+classInUse.name+' ('+row.array.toString()+')'
 		element.value=element.value.replace(/\s+/g, "")
 		return text
 	}
-	function calcNewLine(row,element,classInUse,slot){
-		let text = row.text.split(row.name)[0].trim()+' '+row.name+' = new '+classInUse.name+'('
-		console.log(element)
+	function updateLine(row,element,tableObj,slot){
+		let text = tableObj.tableType.front(row.name).trim()+' new '+tableObj.classInUse.name+' ('
+		console.log(text)
 		let newSlot = element.value
 		if(newSlot.endsWith(',')||newSlot.startsWith(',')){
 			newSlot = newSlot.replace(/,\s*$/, "").replace(/^,/, "")
 			postMessage('error','Commas are used todelimit table enteries. Commas can be used withing quotes, arrays or objects')
 		}
-		for(let i=0;i<row.array.length;i++){
-			if(i==slot){text=text+newSlot+','}
-			else text=text+row.array[i]+','
+		console.log(tableObj)
+		for(let i=0;i<tableObj.classInUse.items.length;i++){
+			let place = row.array[i]==undefined?'""':row.array[i]
+			if(i<slot){text=text+place+','}
+			else if(i==slot){text=text+newSlot+','}
+			else{text=text+place+','}
 		}
-		text = text+(')')
+		text = text.trim().replace(/("",)+$/g, "")
+		text = text.replace(/,+$/, "")
+		text = text+')'+tableObj.tableType.back
+		text = text.replace(/(\r?\n){2,}/g, "\n")
+		console.log(text)
 		return text
 	}
-	function updateRow(line,content){
-		vscode.postMessage({type:'rowchange',line:line,newLine:content})
+	function createLine(tableObj,name='Placeholder',element,slot=undefined){
+		let text = tableObj.tableType.front(name).trim()+' new '+tableObj.classInUse.name.trim()+' ('
+		console.log(text)
+		if(slot!==undefined){
+			for(let i=0;i<tableObj.classInUse.items.length;i++){
+				if(i<slot){text=text+'""'+','}
+				else if(i==slot){text=text+element.value+','}
+			}
+		}
+		text = text+')'+tableObj.tableType.back
+		return text
 	}
-	function BuildTable(location,table,classInUse,number){
+	function RowAdd(line,content){
+		vscode.postMessage({type:'RowAdd',after:line,content:content})
+	}
+	function updateRow(line,content){
+		vscode.postMessage({type:'RowUpdate',line:line,newLine:content})
+	}
+	function deleteRow(line){
+		vscode.postMessage({type:'RowDelete',line:line})
+	}
+	function BuildRow(location,tableId,table,i,type='standard'){
+		let row = table.table[i]
+		if(type === 'new')row=table.table[table.table.length-1]
+		let classInUse = table.classInUse
+		let tableType = table.tableType
+		let rowE = BuildElement('tr','row row'+type,location)
+		let numb = BuildNumber(rowE,type=='standard'?i:'+')
+		let supress = false
+		if(type!=='new'){
+			let deletebutton = BuildElement('div','delete row',numb,'×')
+			deletebutton.addEventListener('click',()=>deleteRow(row.absolutePosition))
+		}
+		
+		if(tableType.namedRows){
+			let value = row.name==undefined||type=='new'?'Placeholder':row.name
+			let name = BuildElement('th','head row'+i,rowE)
+			let nameinput = BuildElement('input','head row'+i,name,value)
+			let namefunction = (e)=>{
+				if(supress)return
+				supress = true
+				if(type=='standard'){
+					updateRow(row.absolutePosition,renameLine(row,e.target,classInUse))
+				}else{
+					RowAdd(row.absolutePosition,createLine(table,e.target.value))
+				}
+			}
+			if(type=='standard')nameinput.value = value
+			nameinput.placeholder = value
+			nameinput.addEventListener('blur',(e)=>namefunction(e))
+			nameinput.addEventListener('keydown',(e)=>e.key==='Enter'&&namefunction(e))
+		}
+		for(let c =0;c<classInUse.items.length;c++){
+			let defined = row.array[c]==undefined || row.array[c].trim()=='""'||row.array[c].trim()=="" || type =='new'?false:true
+			let cell = defined?row.array[c]:''
+			let className = defined?'set ':'default '
+			let item = BuildElement('td',className+classInUse.items[c]+' row'+i,rowE)
+			let input = BuildElement('input',className+classInUse.items[c]+' row'+i,item,cell)
+			input.value=cell
+			input.placeholder=classInUse.defaults[c]
+			let update = e=>{
+				if(supress)return
+				supress = true
+				switch(type){
+					case 'standard':
+						if(e.target.value !==cell)updateRow(row.absolutePosition,updateLine(row,e.target,table,c))
+						break;
+					case 'new':
+						if(e.target.value !=='')RowAdd(row.absolutePosition,createLine(table,'Placeholder',e.target,c))
+						break;
+				}
+			}
+			input.addEventListener('keydown',(e)=>e.key === 'Enter'&& update(e))
+			input.addEventListener('blur',(e)=>update(e))
+			input.addEventListener('focus',()=>{Highlight(classInUse.items[c],true,tableId);Highlight('row'+i,true,tableId)})
+		}
+	
+	}
+	function BuildTable(location,tableObj,number){
+		let table = tableObj.table
+		let classInUse = tableObj.classInUse
 		let id = 'table'+number
 		let displayTable = BuildElement('table','table',location)
 		displayTable.id = id
 		let Header = BuildElement('tr','head',displayTable)
 		BuildNumber(Header)
-		Header.appendChild(document.createElement('th'))
+		if(tableObj.tableType.namedRows)BuildElement('th','classinuse',Header,'class: '+classInUse.name)
 		for(let head of classInUse.items)BuildElement('th',head,Header,head)
-		for(let i=0;i<table.length;i++){
-			let row = table[i]
-			let rowE = BuildElement('tr','row',displayTable)
-			BuildNumber(rowE,i)
-			let name = BuildElement('th','head '+row.name,rowE)
-			let nameinput = BuildElement('input','head '+row.name,name,row.name)
-			nameinput.value = row.name
-			nameinput.addEventListener('blur',(e)=>updateRow(row.absolutePosition,renameLine(row,e.target,classInUse)))
-			nameinput.addEventListener('keydown',(e)=>e.key==='Enter'&&updateRow(row.absolutePosition,renameLine(row,e.target,classInUse)))
-			for(let c =0;c<classInUse.items.length;c++){
-				let defined = row.array[c]==undefined || row.array[c].trim()=='""'||row.array[c].trim()==""?false:true
-				let cell = defined?row.array[c]:''
-				let className = defined?'set ':'default '
-				let item = BuildElement('td',className+classInUse.items[c]+' '+row.name,rowE)
-				let input = BuildElement('input',className+classInUse.items[c]+' '+row.name,item,cell)
-				input.value=cell
-				input.placeholder=classInUse.defaults[c]
-				input.addEventListener('keydown',(e)=>{
-					if(e.key === 'Enter'){
-						if(e.target.value !==cell)updateRow(row.absolutePosition,calcNewLine(row,e.target,classInUse,c))
-					}
-				})
-				input.addEventListener('blur',(e)=>{
-					Highlight(classInUse.items[c],false,id);
-					Highlight(row.name,false,id)
-					if(e.target.value !==cell)updateRow(row.absolutePosition,calcNewLine(row,e.target,classInUse,c))
-				})
-				input.addEventListener('focus',()=>{Highlight(classInUse.items[c],true,id);Highlight(row.name,true,id)})
-
-			}
+		let counter = 1
+			for(let i=0;i<table.length;i++){
+			if(table[i].name == 'New'+counter)counter=counter+1
+			BuildRow(displayTable,id,tableObj,i)
 		}
+		BuildRow(
+			displayTable,
+			id,
+			tableObj,
+			table[table.length-1].absolutePosition,
+			'new')
+	}
+	function BuildNew(location,table){
+
 	}
 
 	function updateContent(/** @type {string} */ text){
 		const tables = Idenitfy(text)
 		body.textContent=''
 		for(let i =0; i<tables.length;i++){
+			if(tables[i].table == undefined){
+
+			}else{
 			let heading = BuildElement('div','tablehead',body)
 			BuildElement('h2','title',heading,tables[i].classInUse.name+' Table')
-			BuildElement('p','count',heading,tables[i].table.length)
-			BuildTable(body,tables[i].table,tables[i].classInUse,i)
+			BuildElement('p','count',heading,'count: '+tables[i].table.length)
+			BuildElement('p','type',heading,tables[i].tableType.display)
+			BuildTable(body,tables[i],i)
+			}
 		}
 	}
 	// Handle messages sent from the extension to the webview
@@ -230,13 +380,12 @@
 		switch (message.type) {
 			case 'update':
 				const text = message.text;
-
 				// Update our webview's content
 				updateContent(text);
 
 				// Then persist state information.
 				// This state is returned in the call to `vscode.getState` below when a webview is reloaded.
-				vscode.setState({ text });
+				vscode.setState({ text:text,types:types});
 
 				return;
 			case 'log':

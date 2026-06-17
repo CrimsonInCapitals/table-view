@@ -1,7 +1,7 @@
 {
 	"name": "class-table-view",
 	"displayName": "Class Table View",
-	"description": "tables repeat new from class",
+	"description": "Tables for New From Class",
 	"version": "0.0.3",
 	"publisher": "crimsonincapitals",
 	"icon": "documentation/icon.png",
@@ -21,8 +21,9 @@
 		"vscode": "^1.100.0"
 	},
 	"categories": [
-		"Other"
+		"Visualization"
 	],
+	"keywords": ["table","visualization","class","code generator"],
 	"activationEvents": [],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -42,12 +43,12 @@
 		"commands": [
 			{"command": "conditionalWebview.show",
 			"title": "Open In Table View"},
-			{"command": "CRIMSON.maketable",
+			{"command": "CRIMSON.converttable",
 			"title": "Creat Table At Selection"}
 		],
 		"menus": {
 			"editor/context": [
-				{"command": "CRIMSON.maketable",
+				{"command": "CRIMSON.converttable",
 				"group": "navigation"}
 			]
 		}

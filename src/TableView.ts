@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { getNonce } from './util';
+import { types } from './TableTypes';
 
 export class TableViewEditorProvider implements vscode.CustomTextEditorProvider {
 
@@ -29,7 +30,7 @@ export class TableViewEditorProvider implements vscode.CustomTextEditorProvider 
 	): Promise<void> {
 
 		const text = document.getText();
-		const trigger = "//Table View Start // This document was build using Table View, learn more at: https://crimsonincapitals.github.io/";
+		const trigger = "//Table View Start";
 
 		if (!text.includes(trigger)) {
 			await vscode.commands.executeCommand(
@@ -49,6 +50,7 @@ export class TableViewEditorProvider implements vscode.CustomTextEditorProvider 
 			webviewPanel.webview.postMessage({
 				type: 'update',
 				text: document.getText(),
+				tableTypes: types
 			});
 		}
 
@@ -64,7 +66,7 @@ export class TableViewEditorProvider implements vscode.CustomTextEditorProvider 
 		});
 
 		// Receive message from the webview.
-		webviewPanel.webview.onDidReceiveMessage(e => {
+		webviewPanel.webview.onDidReceiveMessage(async (e) => {
 			switch (e.type) {
 				case 'message':					
 					switch(e.messagetype){
@@ -77,25 +79,45 @@ export class TableViewEditorProvider implements vscode.CustomTextEditorProvider 
 					}
 					break
 					// this.addNewScratch(document);
-
-				case 'rowchange':
+					
+				case 'RowUpdate':
 					const edit = new vscode.WorkspaceEdit();
 					let line = document.lineAt(e.line)
-					console.log(line.range)
 					edit.replace(
 						document.uri,
 						new vscode.Range(line.range.start,line.range.end),
-						e.newLine
+						e.newLine.replace(/(\r?\n){1,}/g, "")
 					)
 					vscode.workspace.applyEdit(edit)
 					vscode.window.showInformationMessage('Row updated')
-
-					// this.deleteScratch(document, e.id);
 					return;
-				case 'rowadd':
-					// this.clearScratch(document)
+					
+				case 'RowAdd':
+					const editAdd = new vscode.WorkspaceEdit();
+					let lineadd = document.lineAt(e.after)
+					editAdd.insert(
+						document.uri,
+						new vscode.Position(lineadd.range.end.line+1,0),
+						e.content.replace(/(\r?\n){2,}/g, "\n")
+					)
+					vscode.workspace.applyEdit(editAdd)
+					vscode.window.showInformationMessage('Row updated')					
+					return;
+				
+				case 'RowDelete':
+					let confirm = await vscode.window.showWarningMessage('Are you sure you want to delete this row?','Delete','No')
+					if(confirm !== 'Delete') return;
+					const editDelete = new vscode.WorkspaceEdit();
+					let lineDelete = document.lineAt(e.line)
+					editDelete.delete(
+						document.uri,
+						new vscode.Range(lineDelete.range.start,lineDelete.rangeIncludingLineBreak.end)
+					)
+					vscode.workspace.applyEdit(editDelete)
+					vscode.window.showInformationMessage('Row deleted')					
 					return;
 			}
+			
 		});
 		updateWebview();
 	}
@@ -142,7 +164,7 @@ export class TableViewEditorProvider implements vscode.CustomTextEditorProvider 
 				<title>Table View</title>
 			</head>
 			<body id='root'>
-			hello
+				Loading is taking longer than expected, please wait...
 				<script nonce="${nonce}" src="${scriptUri}"/>
 			</body>
 			</html>`;
