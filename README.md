@@ -59,9 +59,9 @@ When a file is opened with the markers it will be replaced by table view
 
 ## Development plans
 In order of priority
-✅ adding the ability to convert selected sections with a command to make adding table easier
-✅ adding different table types
-✅ adding 'add', 'delete' buttons 
+- ✅ adding the ability to convert selected sections with a command to make adding table easier
+- ✅ adding different table types
+- ✅ adding 'add', 'delete' buttons 
 - 'duplicate' row functions
 - adding validation to variable names
 - resize collumn widths
