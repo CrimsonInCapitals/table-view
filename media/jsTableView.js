@@ -330,7 +330,7 @@
 			let name = BuildElement('th','head row'+i,rowE)
 			let nameinput = BuildElement('input','head row'+i,name,value)
 			let namefunction = (e)=>{
-				if(supress)return
+				if(supressBlur)return
 				supressBlur = true
 				if(type=='standard'){
 					updateRow(row.absolutePosition,renameLine(row,e.target,classInUse))
