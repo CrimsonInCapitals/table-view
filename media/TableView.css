@@ -8,9 +8,15 @@ div.tablehead{
 	flex-direction: row;
 	align-items: center;
 	gap: 16px;
+	width: calc(100vw - 68px);
+	min-width:fit-content
 }
 .tablehead h2{
 	font-weight: 800;
+	text-wrap: nowrap;
+}
+.tablehead p{
+	text-wrap: nowrap;
 }
 .table .header th.classinuse{
 	font-weight: 400;
@@ -22,6 +28,21 @@ table.table{
 }
 .head th{
 	padding: 8px 16px;
+}
+.head th.head .type{
+	font-weight: 400;
+	font-size: 12px;
+	color:var(--vscode-textSeparator-foreground);
+	position: absolute;
+    right: 16px;
+    top: 8px;
+	bottom: 8px;
+	max-width: 50%;
+	text-wrap:nowrap;
+}
+.head th{
+	background-color: var(--vscode-editor-background);
+	z-index: 2;
 }
 .table td,.table th{
 	border: 2px solid var(--vscode-textSeparator-foreground);
@@ -101,4 +122,28 @@ td.number div.numdiv{
 
 .table td.highlight,.table tr th.highlight{
 	background-color: var(--vscode-editor-hoverHighlightBackground);
+}
+.table td.highlight .delete{
+	display: flex;
+}
+
+
+.classselector .classoptions{
+	padding: 8px 16px;
+	background-color: var(--vscode-editor-hoverHighlightBackground);
+	color: var(--vscode-editor-foreground);
+	height: 32px;
+
+}
+.classselector{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0;
+}
+.classselector .create{
+	padding: 8px 16px;
+	height: 32px;
+	min-width: fit-content;
+	text-wrap: nowrap;
 }

@@ -2,7 +2,7 @@
 	"name": "class-table-view",
 	"displayName": "Class Table View",
 	"description": "Tables for New From Class",
-	"version": "0.0.3",
+	"version": "0.1.0",
 	"publisher": "crimsonincapitals",
 	"icon": "documentation/icon.png",
 	"pricing": "Free",
@@ -44,7 +44,7 @@
 			{"command": "conditionalWebview.show",
 			"title": "Open In Table View"},
 			{"command": "CRIMSON.converttable",
-			"title": "Creat Table At Selection"}
+			"title": "Create Table At Selection"}
 		],
 		"menus": {
 			"editor/context": [

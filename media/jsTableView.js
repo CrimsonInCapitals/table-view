@@ -38,6 +38,7 @@
 			this.front=(vname)=>front.get(vname).trim()+' '
 			this.forntIdentifier = front.identifies
 			this.deconstructFront=(start)=>front.deconstruct(start)
+			this.deconstructBefore=(start)=>before.deconstruct(start)
 			this.namedRows = front.named
 			this.display=display
 			this.back = back+'\n'
@@ -90,29 +91,23 @@
 		}
 		return text.substring(0+cut,indexOfClose-cut)
 	}
-
-	const findClass=(text,name='C')=>{
+	const getAllClasses=(text)=>{
 		if(text.includes('class') == false){postMessage('error','Class must be within document for Class mode');
-		return;}
-		if(name.startsWith('new'))name=name.slice(3).trim()
-		let classes = text.split(' ').join('').split('class'+name+'{')[1]
-		let constructor = getOpentoClose(classes.split('constructor')[1],'(',')',1)
-		let names =[]
-		let defaults = []
-		constructor.split(',').map(item=>{
-			let split = item.split('=')
-			names.push(split[0].trim())
-			defaults.push(split[1]?split[1]:'any')
-		})
-		return {name:name,items:names,defaults:defaults}
+			return;}
+		let [...classes] = text.split('class ').slice(1)
+		let classArray = []
+		for(let C of classes){
+			let name = C.split('{')[0].trim()
+			classArray.push(name)
+		}
+		return classArray
 	}
-
-	const disectfromclass=(C,classInUse)=>{
+	const safeSplit=(text,char)=>{
 		let array =[]
 		let currentSection = ''
 		let opens=[]
-		for(let character of C.substring(C.indexOf('(')+1,C.lastIndexOf(')')).split('')){
-			if(opens.length<=0 && character==','){
+		for(let character of text){
+				if(opens.length<=0 && character==char){
 				array.push(currentSection)
 				currentSection=''
 			}else{
@@ -123,6 +118,40 @@
 			}
 		}
 		if(currentSection!=='')array.push(currentSection)//adds last section to array if it doesnt have a comma after it
+		return array
+	}
+	const findClass=(text,name='C')=>{
+		if(text.includes('class') == false){postMessage('error','Class must be within document for Class mode');
+		return;}
+		if(name.startsWith('new'))name=name.slice(3).trim()
+		let classes = text.split(' ').join('').split('class'+name+'{')[1]
+		let constructor = getOpentoClose(classes.split('constructor')[1],'(',')',1)
+		let names =[]
+		let types =[]
+		let defaults = []
+		safeSplit(constructor,',').map(item=>{
+			let name = undefined
+			let type = undefined
+			let def = undefined
+			let equalsplit = safeSplit(item,'=')
+			if(equalsplit.length>1){
+				name = equalsplit[0]
+				def = equalsplit[1]
+			}else name = item
+			let colonsplit = safeSplit(name,':')
+			if(colonsplit.length>1){
+				name = colonsplit[0]
+				type= colonsplit[1]
+			}
+			names.push(name)
+			types.push(type)
+			defaults.push(def)
+		})
+		return {name:name,items:names,defaults:defaults,types:types}
+	}
+
+	const disectfromclass=(C,classInUse)=>{
+		let array = safeSplit(C.substring(C.indexOf('(')+1,C.lastIndexOf(')')).split(''),',')
 		let obj = classInUse.items.map((item,index)=>this[item]=array[index])
 		return [obj,array]
 	}
@@ -148,6 +177,10 @@
 			let rows = lines.slice(TableLocations[tableI][0],TableLocations[tableI][1])
 			let tableType = IdentifyType(rows[0])
 			if(tableType == undefined){postMessage('error','Table type is not defined, please define a table type in the first line of the table');return}
+			let name = undefined
+			if(tableType.askName){
+				name = tableType.deconstructBefore(rows[1])
+			}
 			let table = []
 			let classInUse=undefined
 			for(let i = 1;i<rows.length;i++){
@@ -176,8 +209,9 @@
 				}
 			}
 			if(table.length<=0){
-				Tables.push({table:undefined,toAdd:TableLocations[tableI][1],tableType:tableType})
-			}else Tables.push({table:table,classInUse:classInUse,tableType:tableType})
+				let line = ((TableLocations[tableI][1]-TableLocations[tableI][0])/2)+TableLocations[tableI][0]
+				Tables.push({table:undefined,toAdd:line,tableType:tableType,name:name})
+			}else Tables.push({table:table,classInUse:classInUse,tableType:tableType,name:name})
 		}
 
 		return(Tables)
@@ -192,7 +226,11 @@
 			if(lines[i].startsWith(startID)){
 				let foundend=false
 				for(let h=i;h<lines.length;h++){
-					if(lines[h].startsWith(endID)){
+					if(lines[h].startsWith(startID) && h!==i){
+						postMessage('error',"A table isn't terminated correctly")
+						h=lines.length
+					}
+					else if(lines[h].startsWith(endID)){
 						foundend=true
 						TableLocations.push([i,h])
 						h=lines.length
@@ -215,9 +253,9 @@
 		location.appendChild(element)
 		return element
 	}
-	function BuildNumber(location,number='#'){
-		let num = BuildElement('td','number',location)
-		BuildElement('div','numdiv',num,number)
+	function BuildNumber(location,number='#',className=''){
+		let num = BuildElement('td','number '+className,location)
+		BuildElement('div','numdiv '+className,num,number)
 		return num
 	}
 	function Highlight(className,direction=true,table){
@@ -234,13 +272,11 @@
 	}
 	function updateLine(row,element,tableObj,slot){
 		let text = tableObj.tableType.front(row.name).trim()+' new '+tableObj.classInUse.name+' ('
-		console.log(text)
 		let newSlot = element.value
 		if(newSlot.endsWith(',')||newSlot.startsWith(',')){
 			newSlot = newSlot.replace(/,\s*$/, "").replace(/^,/, "")
 			postMessage('error','Commas are used todelimit table enteries. Commas can be used withing quotes, arrays or objects')
 		}
-		console.log(tableObj)
 		for(let i=0;i<tableObj.classInUse.items.length;i++){
 			let place = row.array[i]==undefined?'""':row.array[i]
 			if(i<slot){text=text+place+','}
@@ -251,12 +287,10 @@
 		text = text.replace(/,+$/, "")
 		text = text+')'+tableObj.tableType.back
 		text = text.replace(/(\r?\n){2,}/g, "\n")
-		console.log(text)
 		return text
 	}
 	function createLine(tableObj,name='Placeholder',element,slot=undefined){
 		let text = tableObj.tableType.front(name).trim()+' new '+tableObj.classInUse.name.trim()+' ('
-		console.log(text)
 		if(slot!==undefined){
 			for(let i=0;i<tableObj.classInUse.items.length;i++){
 				if(i<slot){text=text+'""'+','}
@@ -281,11 +315,14 @@
 		let classInUse = table.classInUse
 		let tableType = table.tableType
 		let rowE = BuildElement('tr','row row'+type,location)
-		let numb = BuildNumber(rowE,type=='standard'?i:'+')
-		let supress = false
+		let numb = BuildNumber(rowE,type=='standard'?i:'+', 'row'+i)
+		let supressBlur = false
 		if(type!=='new'){
 			let deletebutton = BuildElement('div','delete row',numb,'×')
-			deletebutton.addEventListener('click',()=>deleteRow(row.absolutePosition))
+			deletebutton.addEventListener('click',()=>{
+				supressBlur=true
+				deleteRow(row.absolutePosition)
+			})
 		}
 		
 		if(tableType.namedRows){
@@ -294,7 +331,7 @@
 			let nameinput = BuildElement('input','head row'+i,name,value)
 			let namefunction = (e)=>{
 				if(supress)return
-				supress = true
+				supressBlur = true
 				if(type=='standard'){
 					updateRow(row.absolutePosition,renameLine(row,e.target,classInUse))
 				}else{
@@ -315,8 +352,9 @@
 			input.value=cell
 			input.placeholder=classInUse.defaults[c]
 			let update = e=>{
-				if(supress)return
-				supress = true
+				Highlight(classInUse.items[c],false,tableId);Highlight('row'+i,false,tableId)
+				if(supressBlur)return
+				supressBlur = true
 				switch(type){
 					case 'standard':
 						if(e.target.value !==cell)updateRow(row.absolutePosition,updateLine(row,e.target,table,c))
@@ -341,7 +379,11 @@
 		let Header = BuildElement('tr','head',displayTable)
 		BuildNumber(Header)
 		if(tableObj.tableType.namedRows)BuildElement('th','classinuse',Header,'class: '+classInUse.name)
-		for(let head of classInUse.items)BuildElement('th',head,Header,head)
+		for(let i=0;i<classInUse.items.length;i++){
+			let head = classInUse.items[i]
+			let heading = BuildElement('th','head '+head,Header,head)
+			if(classInUse.types[i]!==undefined)BuildElement('p','type',heading,classInUse.types[i])
+		}
 		let counter = 1
 			for(let i=0;i<table.length;i++){
 			if(table[i].name == 'New'+counter)counter=counter+1
@@ -354,25 +396,47 @@
 			table[table.length-1].absolutePosition,
 			'new')
 	}
-	function BuildNew(location,table){
-
+	function BuildNew(text,table,location){
+		let classOptions = getAllClasses(text)
+		if(classOptions.length<=0){
+			postMessage('error','No classes found in document');
+			return
+		}
+		BuildElement('p','classselect',location,'Select Class:')
+		let selector = BuildElement('div','classselector',location)
+		let options = BuildElement('select','classoptions',selector)
+		for(let c of classOptions){
+			let option = BuildElement('option','classoption',options,c)
+			option.value=c
+		}
+		let create = BuildElement('button','create',selector,'Create Table')
+		create.addEventListener('click',()=>{
+			table.classInUse = findClass(text,options.value)
+			RowAdd(table.toAdd,createLine(table,'Placeholder'))
+		})
 	}
 
 	function updateContent(/** @type {string} */ text){
 		const tables = Idenitfy(text)
 		body.textContent=''
 		for(let i =0; i<tables.length;i++){
-			if(tables[i].table == undefined){
-
-			}else{
 			let heading = BuildElement('div','tablehead',body)
-			BuildElement('h2','title',heading,tables[i].classInUse.name+' Table')
+			let name = undefined
+			if(tables[i].table == undefined){
+				name = tables[i].name?tables[i].name:'New Table'
+				BuildElement('h2','title',heading,name)
+				BuildNew(text,tables[i],heading)
+			}else{
+			name = tables[i].name?tables[i].name:tables[i].classInUse.name
+			BuildElement('h2','title',heading,name+' Table')
 			BuildElement('p','count',heading,'count: '+tables[i].table.length)
 			BuildElement('p','type',heading,tables[i].tableType.display)
 			BuildTable(body,tables[i],i)
 			}
 		}
 	}
+
+
 	// Handle messages sent from the extension to the webview
 	window.addEventListener('message', event => {
 
