@@ -309,6 +309,33 @@
 	function deleteRow(line){
 		vscode.postMessage({type:'RowDelete',line:line})
 	}
+	const activeKeys={}
+	body.addEventListener('keydown',(e)=>{
+		if(activeKeys[e.key]===false||activeKeys[e.key]===undefined){
+			activeKeys[e.key]={active:true,ts:e.timeStamp}
+		}
+	})
+	body.addEventListener('keyup',(e)=>activeKeys[e.key]=false)
+	const selectedCells={}
+	const lastSelected=undefined
+	const mulitSelect=(e,col,row)=>{
+		e.target.classList.add('selected')
+		console.log('fired multi')
+		if(selectedCells[col+row]!==undefined){selectedCells.remove(col+row);return}
+		if(lastSelected==undefined){selectedCells[col+row]={e:e,activeKeys:activeKeys};return;}
+		lastSelected={e:e,activeKeys:activeKeys}
+		console.log(lastSelected)
+		if(lastSelected.activeKeys && lastSelected.activeKeys.Shift && lastSelected.activeKeys.Shift.ts == activeKeys.Shift.ts){
+			lastSelected=undefined
+			// select area
+		}else{
+			selectedCells.push({e:e,activeKeys:activeKeys})
+		}
+	}
+	const clearMulitSelect=()=>{
+		let selected = body.getElementsByClassName('selected')
+		for(let cell of selected)cell.classList.remove('selected')
+	}
 	function BuildRow(location,tableId,table,i,type='standard'){
 		let row = table.table[i]
 		if(type === 'new')row=table.table[table.table.length-1]
@@ -343,6 +370,7 @@
 			nameinput.addEventListener('blur',(e)=>namefunction(e))
 			nameinput.addEventListener('keydown',(e)=>e.key==='Enter'&&namefunction(e))
 		}
+		
 		for(let c =0;c<classInUse.items.length;c++){
 			let defined = row.array[c]==undefined || row.array[c].trim()=='""'||row.array[c].trim()=="" || type =='new'?false:true
 			let cell = defined?row.array[c]:''
@@ -353,6 +381,7 @@
 			input.placeholder=classInUse.defaults[c]
 			let update = e=>{
 				Highlight(classInUse.items[c],false,tableId);Highlight('row'+i,false,tableId)
+				item.classList.remove('selected')
 				if(supressBlur)return
 				supressBlur = true
 				switch(type){
@@ -364,9 +393,26 @@
 						break;
 				}
 			}
-			input.addEventListener('keydown',(e)=>e.key === 'Enter'&& update(e))
+			input.addEventListener('keydown',(e)=>{
+				switch (e.key) {
+					case 'Enter':
+						update(e)
+						break;
+					default:
+						break;
+				}
+				e.key === 'Enter'&& update(e)
+			})
 			input.addEventListener('blur',(e)=>update(e))
-			input.addEventListener('focus',()=>{Highlight(classInUse.items[c],true,tableId);Highlight('row'+i,true,tableId)})
+			input.addEventListener('focus',(e)=>{
+				if(activeKeys.Shift){
+					mulitSelect(e,row.absolutePosition,classInUse.items[c])
+				}else{
+					clearMulitSelect()
+					input.classList.add('selected')
+					Highlight(classInUse.items[c],true,tableId);Highlight('row'+i,true,tableId)
+				}
+			})
 		}
 	
 	}

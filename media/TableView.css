@@ -40,6 +40,13 @@ table.table{
 	max-width: 50%;
 	text-wrap:nowrap;
 }
+table.table td input.selected{
+	border: 2px solid var(--vscode-editorInfo-foreground);
+	z-index: 1;
+	border-radius: 2px;
+	box-sizing: content-box;
+
+}
 .head th{
 	background-color: var(--vscode-editor-background);
 	z-index: 2;
